@@ -1,0 +1,140 @@
+namespace PoS
+{
+    public partial class ProductsViewForm : Form
+    {
+        public ProductsViewForm()
+        {
+            InitializeComponent();
+
+            // Center the form on the screen
+            this.CenterToScreen();
+
+            LoadProducts();
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            // Create an instance of AddProductForm
+            AddProductForm addProductForm = new AddProductForm(this);
+
+            // Show the AddCategoryForm as a dialog
+            if (addProductForm.ShowDialog() == DialogResult.OK)
+            {
+                // Reload product in CategoryViewForm
+                LoadProducts();
+            }
+        }
+
+        private void LoadProducts()
+        {
+            try
+            {
+                dgvProducts.Rows.Clear();
+
+                // Read all lines from the product file
+                string[] lines = File.ReadAllLines("products.txt");
+                int id = 1;
+
+                foreach (string line in lines)
+                {
+                    // Split each line into Sr#, ID, Name
+                    string[] parts = line.Split(',');
+
+                    if (parts.Length >= 2)
+                    {
+                        // Add the row with ID starting from 1
+                        dgvProducts.Rows.Add(id++, parts[0], parts[1]);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading products: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void dgvProducts_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // Get the row to be deleted
+            DataGridViewRow rowToDelete = dgvProducts.Rows[e.RowIndex];
+
+            // Display confirmation dialog for deletion
+            DialogResult result = MessageBox.Show(this, $"Are you sure you want to delete the product '{rowToDelete.Cells["dvgName"].Value}'?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            // If user confirms deletion, proceed with deletion
+            if (result == DialogResult.Yes)
+            {
+                int productId;
+                string productName = rowToDelete.Cells["dvgName"].Value?.ToString() ?? string.Empty;
+
+                // Check if the cell value is null or can be parsed as an integer
+                if (rowToDelete.Cells["dvgId"].Value == null || !int.TryParse(rowToDelete.Cells["dvgId"].Value.ToString(), out productId))
+                {
+                    MessageBox.Show(this, "Invalid product ID in the selected row.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                try
+                {
+                    // Remove the category from the data source
+                    DeleteProduct(productId, productName);
+
+                    // Remove the row from the DataGridView
+                    dgvProducts.Rows.RemoveAt(e.RowIndex);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, $"Error deleting product: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }     
+        }
+
+        private void DeleteProduct(int productId, string productName)
+        {
+            // Read all lines from the product file
+            List<string> lines = File.ReadAllLines("products.txt").ToList();
+
+            // Find the product line to remove
+            string productLine = lines.FirstOrDefault(line => line.StartsWith($"{productId},{productName}"));
+
+            if (productLine != null)
+            {
+                // Remove the product line from the list
+                lines.Remove(productLine);
+
+                // Write the updated lines back to the file
+                File.WriteAllLines("products.txt", lines.ToArray());
+            }
+        }
+
+        private void txtSearch_TextChanged(object sender, EventArgs e)
+        {
+            // Get the search term from the TextBox
+            string searchTerm = txtSearch.Text.Trim();
+
+            // If the search term is empty, clear any existing selection and return
+            if (string.IsNullOrEmpty(searchTerm))
+            {
+                dgvProducts.ClearSelection();
+                return;
+            }
+
+            // Iterate through the rows of the DataGridView
+            foreach (DataGridViewRow row in dgvProducts.Rows)
+            {
+                // Get the value of the cell in the name column
+                DataGridViewCell nameCell = row.Cells["dvgName"];
+
+                // Check if the nameCell exists and if its value contains the search term (case-insensitive)
+                if (nameCell != null && nameCell.Value != null &&
+                    nameCell.Value.ToString().Equals(searchTerm, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Select the row and scroll it into view
+                    row.Selected = true;
+                    dgvProducts.FirstDisplayedScrollingRowIndex = row.Index;
+                    return; // Exit the method after finding the first match
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,11 @@
+1,House Coffee,5.15,Coffee
+2,Vietnamese Coffee,5.15,Coffee
+3,Thai Milk Tea,5.15,Milk Tea
+4,Taro Milk Tea,5.15,Milk Tea
+5,Oolong Tea,5.15,Tea
+6,Chrysanthemum Tea,5.15,Tea
+7,Crispy Tofu,5.75,Appetizers
+8,Crispy Chicken,5.75,Appetizers
+9,Crispy Chicken Entree,11.00,Entrees
+10,Curry Chicken Entree,11.00,Entrees
+11,Double-Double,7.00,Burger
